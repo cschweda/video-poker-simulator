@@ -52,7 +52,8 @@
   },
   "dependencies": {
     "chart.js": "^4.4.0",
-    "lodash-es": "^4.17.21"
+    "lodash-es": "^4.17.21",
+    "terser": "^5.42.0"
   },
   "engines": {
     "node": ">=18.0.0",
