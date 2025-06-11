@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Video Poker Simulator - Jacks or Better</title>
+    <meta
+      name="description"
+      content="Professional video poker simulator with optimal strategy analysis and comprehensive statistics"
+    />
+    <meta
+      name="keywords"
+      content="video poker, jacks or better, poker simulator, casino games"
+    />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🃏</text></svg>"
+    />
+    <link rel="stylesheet" href="./src/styles/main.css" />
+  </head>
+  <body>
+    <div class="machine">
+      <div class="header">
+        <div class="title">JACKS OR BETTER</div>
+        <div class="subtitle">Video Poker Simulator</div>
+      </div>
+
+      <div class="display-panel">
+        <div class="credits-display">
+          <div class="credits">
+            <div>CREDITS</div>
+            <div class="credits-value" id="credits">5000</div>
+          </div>
+          <div class="bet">
+            <div>BET</div>
+            <div class="bet-value" id="bet">5</div>
+          </div>
+          <div class="winnings">
+            <div>WIN</div>
+            <div class="winnings-value" id="winnings">0</div>
+          </div>
+          <div class="hands">
+            <div>HANDS</div>
+            <div class="hands-value" id="hands">0</div>
+          </div>
+          <div class="session">
+            <div>SESSION</div>
+            <div class="session-value" id="session">0</div>
+          </div>
+        </div>
+
+        <div class="hand-result" id="handResult">Choose your bet and deal</div>
+      </div>
+
+      <div class="card-area">
+        <div class="cards-container" id="cardsContainer">
+          <div class="card card-back" data-index="0">
+            <div class="hold-indicator">HELD</div>
+          </div>
+          <div class="card card-back" data-index="1">
+            <div class="hold-indicator">HELD</div>
+          </div>
+          <div class="card card-back" data-index="2">
+            <div class="hold-indicator">HELD</div>
+          </div>
+          <div class="card card-back" data-index="3">
+            <div class="hold-indicator">HELD</div>
+          </div>
+          <div class="card card-back" data-index="4">
+            <div class="hold-indicator">HELD</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="controls">
+        <button class="btn" id="betOne">BET ONE & DEAL</button>
+        <button class="btn btn-max" id="betMax">BET MAX & DEAL</button>
+        <button class="btn btn-deal" id="deal">DEAL</button>
+        <button class="btn" id="drawBtn" disabled>DRAW</button>
+      </div>
+
+      <div class="paytable">
+        <h3>PAYTABLE - TOTAL PAYOUT</h3>
+        <div class="paytable-grid" id="paytableGrid">
+          <div class="paytable-header">HAND</div>
+          <div class="paytable-header">1</div>
+          <div class="paytable-header">2</div>
+          <div class="paytable-header">3</div>
+          <div class="paytable-header">4</div>
+          <div class="paytable-header">5</div>
+        </div>
+      </div>
+
+      <div class="settings">
+        <h3>MACHINE SETTINGS</h3>
+        <div class="settings-grid">
+          <div class="setting-group">
+            <label class="setting-label">Paytable Variation:</label>
+            <select class="setting-input" id="paytableVariation">
+              <option value="full">Full Pay (99.54% RTP)</option>
+              <option value="short">Short Pay (98.39% RTP)</option>
+              <option value="bonus">Bonus Poker (99.17% RTP)</option>
+            </select>
+          </div>
+          <div class="setting-group">
+            <label class="setting-label">Reset Credits:</label>
+            <input
+              type="number"
+              class="setting-input"
+              id="resetCredits"
+              value="5000"
+              min="100"
+              max="10000"
+            />
+            <button
+              class="btn"
+              id="resetBtn"
+              style="margin-top: 10px; width: 100%; padding: 8px"
+            >
+              RESET
+            </button>
+          </div>
+        </div>
+        <div class="rtp-display" id="rtpDisplay">Current RTP: 99.54%</div>
+      </div>
+
+      <div class="simulation-panel">
+        <h3>🎰 SIMULATION MODE 🎰</h3>
+        <div class="simulation-controls">
+          <div class="sim-control-group">
+            <label class="setting-label">Number of Hands:</label>
+            <input
+              type="number"
+              class="setting-input"
+              id="simHands"
+              value="10000"
+              min="100"
+              max="100000"
+            />
+          </div>
+          <div class="sim-control-group">
+            <label class="setting-label">Speed (ms/hand):</label>
+            <input
+              type="number"
+              class="setting-input"
+              id="simSpeed"
+              value="1"
+              min="1"
+              max="1000"
+            />
+          </div>
+          <div class="sim-control-group">
+            <label class="setting-label">Strategy:</label>
+            <select class="setting-input" id="simStrategy">
+              <option value="optimal">Optimal Play</option>
+              <option value="aces-high">Aces Always Held</option>
+              <option value="aces-optimal">Aces Held with Optimal</option>
+              <option value="random">Random Hold</option>
+            </select>
+          </div>
+          <div class="sim-control-group">
+            <button class="btn btn-simulation" id="startSim">
+              START SIMULATION
+            </button>
+            <button class="btn btn-simulation" id="stopSim" disabled>
+              STOP
+            </button>
+          </div>
+        </div>
+
+        <div class="progress-container" id="progressContainer">
+          <div class="progress-bar">
+            <div class="progress-fill" id="progressFill">0%</div>
+          </div>
+          <div class="sim-current-hand" id="currentHand">
+            Ready to simulate...
+          </div>
+
+          <div class="sim-stats">
+            <div class="sim-stat">
+              <div class="sim-stat-label">Hands Played</div>
+              <div class="sim-stat-value" id="simHandsPlayed">0</div>
+            </div>
+            <div class="sim-stat">
+              <div class="sim-stat-label">Total Wagered</div>
+              <div class="sim-stat-value" id="simWagered">0</div>
+            </div>
+            <div class="sim-stat">
+              <div class="sim-stat-label">Total Won</div>
+              <div class="sim-stat-value" id="simWon">0</div>
+            </div>
+            <div class="sim-stat">
+              <div class="sim-stat-label">Net Result</div>
+              <div class="sim-stat-value" id="simNet">0</div>
+            </div>
+            <div class="sim-stat">
+              <div class="sim-stat-label">Actual RTP</div>
+              <div class="sim-stat-value" id="simRTP">0%</div>
+            </div>
+            <div class="sim-stat">
+              <div class="sim-stat-label">Win Rate</div>
+              <div class="sim-stat-value" id="simWinRate">0%</div>
+            </div>
+          </div>
+
+          <div class="hand-frequency">
+            <div class="freq-header">Hand Type</div>
+            <div class="freq-header">Count</div>
+            <div class="freq-header">Frequency</div>
+
+            <div class="freq-row">
+              <div class="freq-cell">Royal Flush</div>
+              <div class="freq-cell" id="freq-royal">0</div>
+              <div class="freq-cell" id="freqp-royal">0%</div>
+            </div>
+            <div class="freq-row">
+              <div class="freq-cell">Straight Flush</div>
+              <div class="freq-cell" id="freq-straight-flush">0</div>
+              <div class="freq-cell" id="freqp-straight-flush">0%</div>
+            </div>
+            <div class="freq-row">
+              <div class="freq-cell">Four of a Kind</div>
+              <div class="freq-cell" id="freq-four-kind">0</div>
+              <div class="freq-cell" id="freqp-four-kind">0%</div>
+            </div>
+            <div class="freq-row">
+              <div class="freq-cell">Full House</div>
+              <div class="freq-cell" id="freq-full-house">0</div>
+              <div class="freq-cell" id="freqp-full-house">0%</div>
+            </div>
+            <div class="freq-row">
+              <div class="freq-cell">Flush</div>
+              <div class="freq-cell" id="freq-flush">0</div>
+              <div class="freq-cell" id="freqp-flush">0%</div>
+            </div>
+            <div class="freq-row">
+              <div class="freq-cell">Straight</div>
+              <div class="freq-cell" id="freq-straight">0</div>
+              <div class="freq-cell" id="freqp-straight">0%</div>
+            </div>
+            <div class="freq-row">
+              <div class="freq-cell">Three of a Kind</div>
+              <div class="freq-cell" id="freq-three-kind">0</div>
+              <div class="freq-cell" id="freqp-three-kind">0%</div>
+            </div>
+            <div class="freq-row">
+              <div class="freq-cell">Two Pair</div>
+              <div class="freq-cell" id="freq-two-pair">0</div>
+              <div class="freq-cell" id="freqp-two-pair">0%</div>
+            </div>
+            <div class="freq-row">
+              <div class="freq-cell">Jacks or Better</div>
+              <div class="freq-cell" id="freq-jacks-better">0</div>
+              <div class="freq-cell" id="freqp-jacks-better">0%</div>
+            </div>
+            <div class="freq-row">
+              <div class="freq-cell">No Win</div>
+              <div class="freq-cell" id="freq-no-win">0</div>
+              <div class="freq-cell" id="freqp-no-win">0%</div>
+            </div>
+          </div>
+        </div>
+
+        <div
+          class="simulation-graph"
+          id="simulationGraph"
+          style="display: none"
+        >
+          <h4
+            style="
+              color: #f39c12;
+              text-align: center;
+              margin-bottom: 15px;
+              font-size: 1.2em;
+            "
+          >
+            📈 Net Result Over Time
+          </h4>
+          <canvas
+            id="resultChart"
+            width="800"
+            height="400"
+            style="
+              width: 100%;
+              height: 300px;
+              background: rgba(0, 0, 0, 0.3);
+              border-radius: 8px;
+            "
+          ></canvas>
+          <div
+            style="
+              text-align: center;
+              margin-top: 10px;
+              font-size: 0.9em;
+              color: #aaa;
+            "
+          >
+            Shows cumulative net result (credits won - credits wagered)
+            throughout the simulation
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>

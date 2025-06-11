@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Main App</title>
+    <style>
+        body {
+            font-family: monospace;
+            background: #1a1a2e;
+            color: #fff;
+            padding: 20px;
+        }
+        .debug-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #333;
+            border-radius: 5px;
+        }
+        .error { color: #ff6b6b; }
+        .success { color: #4ecdc4; }
+        .warning { color: #f39c12; }
+        button {
+            background: #4ecdc4;
+            color: #1a1a2e;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #45b7aa; }
+        #output {
+            background: #000;
+            padding: 10px;
+            border-radius: 5px;
+            height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+        iframe {
+            width: 100%;
+            height: 600px;
+            border: 1px solid #333;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 Main App Test</h1>
+    
+    <div class="debug-section">
+        <h2>Controls</h2>
+        <button onclick="testMainApp()">Test Main App</button>
+        <button onclick="clickSimulationButton()">Click Simulation Button</button>
+        <button onclick="clearOutput()">Clear Output</button>
+    </div>
+    
+    <div class="debug-section">
+        <h2>Debug Output</h2>
+        <div id="output"></div>
+    </div>
+    
+    <div class="debug-section">
+        <h2>Main App (in iframe)</h2>
+        <iframe id="mainAppFrame" src="/index.html"></iframe>
+    </div>
+
+    <script>
+        let mainAppWindow = null;
+        
+        window.log = function(message, type = 'info') {
+            const output = document.getElementById('output');
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type === 'error' ? 'error' : type === 'success' ? 'success' : type === 'warning' ? 'warning' : '';
+            output.innerHTML += `<span class="${className}">[${timestamp}] ${message}</span>\n`;
+            output.scrollTop = output.scrollHeight;
+            console.log(message);
+        };
+        
+        window.clearOutput = function() {
+            document.getElementById('output').innerHTML = '';
+        };
+        
+        window.testMainApp = function() {
+            log('🔍 Testing main app...', 'info');
+            
+            const iframe = document.getElementById('mainAppFrame');
+            const doc = iframe.contentDocument || iframe.contentWindow.document;
+            
+            // Check if elements exist
+            const startSimBtn = doc.getElementById('startSim');
+            const stopSimBtn = doc.getElementById('stopSim');
+            const simHands = doc.getElementById('simHands');
+            const simSpeed = doc.getElementById('simSpeed');
+            const simStrategy = doc.getElementById('simStrategy');
+            
+            log(`Start button: ${startSimBtn ? 'Found' : 'NOT FOUND'}`, startSimBtn ? 'success' : 'error');
+            log(`Stop button: ${stopSimBtn ? 'Found' : 'NOT FOUND'}`, stopSimBtn ? 'success' : 'error');
+            log(`Sim hands input: ${simHands ? 'Found' : 'NOT FOUND'}`, simHands ? 'success' : 'error');
+            log(`Sim speed input: ${simSpeed ? 'Found' : 'NOT FOUND'}`, simSpeed ? 'success' : 'error');
+            log(`Sim strategy select: ${simStrategy ? 'Found' : 'NOT FOUND'}`, simStrategy ? 'success' : 'error');
+            
+            if (startSimBtn) {
+                log(`Button disabled: ${startSimBtn.disabled}`, 'info');
+                log(`Button onclick: ${startSimBtn.onclick ? 'Set' : 'Not set'}`, 'info');
+                
+                // Check for event listeners
+                const listeners = getEventListeners ? getEventListeners(startSimBtn) : 'Cannot check listeners';
+                log(`Event listeners: ${JSON.stringify(listeners)}`, 'info');
+            }
+        };
+        
+        window.clickSimulationButton = function() {
+            log('🎰 Attempting to click simulation button...', 'info');
+            
+            const iframe = document.getElementById('mainAppFrame');
+            const doc = iframe.contentDocument || iframe.contentWindow.document;
+            const startSimBtn = doc.getElementById('startSim');
+            
+            if (startSimBtn) {
+                log('✅ Found start button, clicking...', 'success');
+                
+                // Override console.log in iframe to capture output
+                const iframeWindow = iframe.contentWindow;
+                const originalLog = iframeWindow.console.log;
+                const originalError = iframeWindow.console.error;
+                const originalWarn = iframeWindow.console.warn;
+                
+                iframeWindow.console.log = function(...args) {
+                    log(`[IFRAME LOG] ${args.join(' ')}`, 'info');
+                    originalLog.apply(this, args);
+                };
+                
+                iframeWindow.console.error = function(...args) {
+                    log(`[IFRAME ERROR] ${args.join(' ')}`, 'error');
+                    originalError.apply(this, args);
+                };
+                
+                iframeWindow.console.warn = function(...args) {
+                    log(`[IFRAME WARN] ${args.join(' ')}`, 'warning');
+                    originalWarn.apply(this, args);
+                };
+                
+                // Click the button
+                startSimBtn.click();
+                log('🖱️ Button clicked!', 'info');
+                
+            } else {
+                log('❌ Start button not found!', 'error');
+            }
+        };
+        
+        // Wait for iframe to load
+        document.getElementById('mainAppFrame').onload = function() {
+            log('📱 Main app iframe loaded', 'success');
+            setTimeout(() => {
+                log('🔍 Running automatic test...', 'info');
+                testMainApp();
+            }, 2000);
+        };
+        
+        window.addEventListener('load', () => {
+            log('🚀 Test page loaded', 'info');
+        });
+    </script>
+</body>
+</html>

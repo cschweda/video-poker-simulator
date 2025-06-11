@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Video Poker Simulator</title>
+    <style>
+        body {
+            font-family: monospace;
+            background: #1a1a2e;
+            color: #fff;
+            padding: 20px;
+        }
+        .debug-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #333;
+            border-radius: 5px;
+        }
+        .error {
+            color: #ff6b6b;
+        }
+        .success {
+            color: #4ecdc4;
+        }
+        .warning {
+            color: #f39c12;
+        }
+        button {
+            background: #4ecdc4;
+            color: #1a1a2e;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #45b7aa;
+        }
+        #output {
+            background: #000;
+            padding: 10px;
+            border-radius: 5px;
+            height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 Video Poker Simulator Debug Tool</h1>
+    
+    <div class="debug-section">
+        <h2>Module Import Tests</h2>
+        <button onclick="testImports()">Test All Imports</button>
+        <button onclick="testSimulation()">Test Simulation</button>
+        <button onclick="clearOutput()">Clear Output</button>
+    </div>
+    
+    <div class="debug-section">
+        <h2>Debug Output</h2>
+        <div id="output"></div>
+    </div>
+
+    <script type="module">
+        let gameEngine, simulationEngine, paytableManager;
+        
+        window.log = function(message, type = 'info') {
+            const output = document.getElementById('output');
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type === 'error' ? 'error' : type === 'success' ? 'success' : type === 'warning' ? 'warning' : '';
+            output.innerHTML += `<span class="${className}">[${timestamp}] ${message}</span>\n`;
+            output.scrollTop = output.scrollHeight;
+            console.log(message);
+        };
+        
+        window.clearOutput = function() {
+            document.getElementById('output').innerHTML = '';
+        };
+        
+        window.testImports = async function() {
+            log('🔍 Testing module imports...', 'info');
+            
+            try {
+                log('Importing PaytableManager...', 'info');
+                const { PaytableManager } = await import('./src/js/PaytableManager.js');
+                paytableManager = new PaytableManager();
+                log('✅ PaytableManager imported successfully', 'success');
+                
+                log('Importing GameEngine...', 'info');
+                const { GameEngine } = await import('./src/js/GameEngine.js');
+                gameEngine = new GameEngine(paytableManager);
+                log('✅ GameEngine imported successfully', 'success');
+                
+                log('Importing SimulationEngine...', 'info');
+                const { SimulationEngine } = await import('./src/js/SimulationEngine.js');
+                simulationEngine = new SimulationEngine(gameEngine);
+                log('✅ SimulationEngine imported successfully', 'success');
+                
+                log('Importing UIController...', 'info');
+                const { UIController } = await import('./src/js/UIController.js');
+                log('✅ UIController imported successfully', 'success');
+                
+                log('🎉 All modules imported successfully!', 'success');
+                
+            } catch (error) {
+                log(`❌ Import error: ${error.message}`, 'error');
+                log(`Stack trace: ${error.stack}`, 'error');
+            }
+        };
+        
+        window.testSimulation = async function() {
+            if (!simulationEngine) {
+                log('⚠️ Please run import tests first', 'warning');
+                return;
+            }
+            
+            log('🎰 Testing simulation...', 'info');
+            
+            try {
+                // Set up event listeners
+                simulationEngine.on('progress', (data) => {
+                    log(`Progress: ${data.handsPlayed}/${data.totalHands} (${data.progress.toFixed(1)}%)`, 'info');
+                });
+                
+                simulationEngine.on('complete', (data) => {
+                    log(`✅ Simulation complete! Hands: ${data.handsPlayed}, RTP: ${data.rtp.toFixed(2)}%`, 'success');
+                });
+                
+                simulationEngine.on('error', (error) => {
+                    log(`❌ Simulation error: ${error}`, 'error');
+                });
+                
+                // Start a small simulation
+                log('Starting simulation with 100 hands...', 'info');
+                await simulationEngine.startSimulation({
+                    totalHands: 100,
+                    speed: 1,
+                    strategy: 'optimal'
+                });
+                
+            } catch (error) {
+                log(`❌ Simulation test error: ${error.message}`, 'error');
+                log(`Stack trace: ${error.stack}`, 'error');
+            }
+        };
+        
+        // Auto-run import test on load
+        window.addEventListener('load', () => {
+            log('🚀 Debug tool loaded. Click "Test All Imports" to begin.', 'info');
+        });
+    </script>
+</body>
+</html>
