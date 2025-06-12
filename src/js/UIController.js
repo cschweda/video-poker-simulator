@@ -13,6 +13,9 @@ export class UIController {
 
     // State
     this.isSimulationRunning = false
+    this.lastCardClickTime = 0
+    this.cardClickDebounceMs = 100 // Prevent rapid clicks
+    this.eventListenersSetup = false // Prevent duplicate event listeners
   }
 
   /**
@@ -33,8 +36,6 @@ export class UIController {
 
       // Initial display update
       this.updateDisplay()
-
-      console.log('✅ UI Controller initialized')
     } catch (error) {
       console.error('❌ Failed to initialize UI Controller:', error)
       throw error
@@ -111,6 +112,10 @@ export class UIController {
    * Setup all event listeners
    */
   setupEventListeners() {
+    if (this.eventListenersSetup) {
+      return
+    }
+
     // Game controls
     this.elements.deal?.addEventListener('click', () => this.handleDeal())
     this.elements.drawBtn?.addEventListener('click', () => this.handleDraw())
@@ -118,7 +123,15 @@ export class UIController {
     this.elements.betMax?.addEventListener('click', () => this.handleBetMax())
     this.elements.resetBtn?.addEventListener('click', () => this.handleReset())
 
-    // Card clicks for holding
+    // Card clicks for holding - remove any existing listeners first
+    if (this.elements.cardsContainer) {
+      // Clone the element to remove all event listeners
+      const oldContainer = this.elements.cardsContainer
+      const newContainer = oldContainer.cloneNode(true)
+      oldContainer.parentNode.replaceChild(newContainer, oldContainer)
+      this.elements.cardsContainer = newContainer
+    }
+
     this.elements.cardsContainer?.addEventListener('click', e =>
       this.handleCardClick(e)
     )
@@ -149,6 +162,8 @@ export class UIController {
       this.handleSimulationComplete(data)
     )
     this.simulationEngine.on('error', error => this.showError(error))
+
+    this.eventListenersSetup = true
   }
 
   /**
@@ -263,11 +278,51 @@ export class UIController {
    * Handle card click for holding
    */
   handleCardClick(event) {
-    const card = event.target.closest('.card')
-    if (!card) return
+    // Prevent event bubbling
+    event.preventDefault()
+    event.stopPropagation()
+
+    // Debounce rapid clicks
+    const now = Date.now()
+    if (now - this.lastCardClickTime < this.cardClickDebounceMs) {
+      return
+    }
+    this.lastCardClickTime = now
+
+    // Try multiple ways to find the card element
+    let card = event.target.closest('.card')
+
+    // If closest() fails, try checking if the target itself is a card
+    if (!card && event.target.classList.contains('card')) {
+      card = event.target
+    }
+
+    // If still no card, try checking parent elements manually
+    if (!card) {
+      let element = event.target
+      while (element && element !== event.currentTarget) {
+        if (element.classList && element.classList.contains('card')) {
+          card = element
+          break
+        }
+        element = element.parentElement
+      }
+    }
+
+    if (!card) {
+      return
+    }
 
     const index = parseInt(card.dataset.index)
-    if (isNaN(index)) return
+    if (isNaN(index)) {
+      return
+    }
+
+    // Only allow holding during the holding phase
+    const currentState = this.gameEngine.getState()
+    if (currentState.gamePhase !== 'holding') {
+      return
+    }
 
     this.gameEngine.toggleHold(index)
   }
@@ -438,6 +493,8 @@ export class UIController {
           }, 800)
         }
 
+        // Preserve the data-index attribute when updating innerHTML
+        cardEl.dataset.index = index
         cardEl.innerHTML = `
           <div class="hold-indicator">HELD</div>
           <div class="card-value">${card.rank}</div>
@@ -447,6 +504,8 @@ export class UIController {
       } else {
         // Show card back
         cardEl.className = 'card card-back'
+        // Preserve the data-index attribute when updating innerHTML
+        cardEl.dataset.index = index
         cardEl.innerHTML = '<div class="hold-indicator">HELD</div>'
       }
     })
