@@ -62,8 +62,8 @@ export class GameEngine {
       this.gameState.heldCards.clear()
       this.gameState.newCards.clear()
 
-      // Create new deck and deal 5 cards
-      this.deck.shuffle()
+      // Reset deck to full 52 cards and shuffle
+      this.deck.reset().shuffle()
       this.gameState.currentHand = []
       for (let i = 0; i < 5; i++) {
         this.gameState.currentHand.push(this.deck.deal())
